@@ -17,3 +17,22 @@ I requested the data and received .zip files for the Adoption and Foster Care An
 ```
 National Data Archive on Child Abuse and Neglect (NDACAN). (2023). Adoption and Foster Care Analysis and Reporting System (AFCARS), Foster Care File 2001-2021. National Data Archive on Child Abuse and Neglect (NDACAN). https://doi.org/10.34681/MW23-Q135
 ```
+
+# Defining Success in Foster Care
+
+Intention: Predict the likelihood of a child successfully being reunified with their parent.
+
+- dischargeReason = Reunified with parent, primary caretaker
+- Does not enter the system a second time before the age of 18.
+
+#### Entering the System Again
+
+In order to successfully measure this we need to:
+
+1. Calculate the age of each exited ['Exited' = 1] child relative to 2021 (the last year of reporting) and make sure it is at least 18.
+2. Check to see if these children appear again in the data set after their exit date.
+3. If child never appears again in the data set and their age is above 18 by 2021, they are considered to have successfully exited the system.
+
+### Subquestions
+
+- What is the likelihood of a child who has been reunified with their parent entering the system again?
