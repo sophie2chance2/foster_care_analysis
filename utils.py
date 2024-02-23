@@ -34,6 +34,8 @@ def make_readable(year_df, variable_values_df):
     readable_df['dischargeReason'] = readable_df['DISREASN'].map(var_values(variable_values_df, 'DISREASN'))
     readable_df['raceEthnicity'] = readable_df['RaceEthn'].map(var_values(variable_values_df, 'RaceEthn'))
     readable_df['everAdopted'] = readable_df['EVERADPT'].map(var_values(variable_values_df, 'EVERADPT'))
+    readable_df['diagnosedDisability'] = readable_df['CLINDIS'].map(var_values(variable_values_df, 'CLINDIS'))
+
 
     readable_df['firstCaretakerAge'] = readable_df['DataYear'] - readable_df['CTK1YR']
     readable_df['secondCaretakerAge'] = readable_df['DataYear'] - readable_df['CTK2YR']
@@ -72,6 +74,7 @@ def make_readable(year_df, variable_values_df):
                         'DISREASN', # In column 'dischargeReason' with mapped values
                         'RaceEthn', # In column 'raceEthnicity' with mapped values
                         'EVERADPT', # In column 'everAdopted' with mapped values
+                        'CLINDIS', # In column 'diagnosedDisability' with mapped values
                         ]
                         + race_columns # These are in the 'raceEthnicity' column
                         + caretaker_race_columns # TODO See if we want to add these back in?

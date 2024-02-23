@@ -5,3 +5,4 @@ pyreadstat
 matplotlib
 seaborn
 mlxtend
+pyarrow
