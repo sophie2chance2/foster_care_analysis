@@ -1,4 +1,13 @@
 import pandas as pd
+import numpy as np
+from io import BytesIO
+
+def read_cloud_data(bucket, blob_name):
+    bytes_stream = BytesIO()
+    blob = bucket.blob(blob_name)
+    blob.download_to_file(bytes_stream)
+    bytes_stream.seek(0)  # Go to the beginning of the file-like object
+    return bytes_stream
 
 def var_values(variable_values_df, var_name):
     var_value_df = variable_values_df[variable_values_df['VarName'] == var_name]
@@ -81,3 +90,57 @@ def make_readable(year_df, variable_values_df):
                         + date_cols # TODO See if we want to add these back in?
                         , inplace=True)
     return readable_df
+
+def remove_nan_values(all_records):
+    '''Clean up NaNs'''
+    # Payment Columns
+    all_records['FCMntPay'] = all_records['FCMntPay'].replace(np.nan, 0).astype(float) # Assumed that if null then they are not getting paid
+    all_records['IVEFC'] = all_records['IVEFC'].replace(np.nan, 0).astype(float) # Assumed that if null then they are not getting paid
+    all_records['IVAAFDC'] = all_records['IVAAFDC'].replace(np.nan, 0).astype(float) # Assumed that if null then they are not getting paid
+
+    # Length of Stay Columns
+    all_records['PreviousLOS'] = all_records['PreviousLOS'].replace(np.nan, 0).astype(float) # Replace NaNs with 0 because it means they have no previous LOS
+    all_records['LifeLOS'] = all_records['LifeLOS'].replace(np.nan, 0).astype(float) # Replace NaNs with 0, if this is null, it is their first placement
+    all_records['SettingLOS'] = all_records['SettingLOS'].replace(np.nan, 0).astype(float) # Replace NaNs with 0 # TODO: Not sure if this is an accurate represnetation, need to look into this more
+
+    # Placement
+    all_records['TOTALREM'] = all_records['TOTALREM'].replace(np.nan, 1).astype(float) # Assume first removal, all records with null have a value of 0 in PreviousLOS
+    all_records['NUMPLEP'] = all_records['NUMPLEP'].replace(np.nan, 1).astype(float) # Assume 1 placement if null
+
+    # Default to no for these columns # TODO - Decide if this is the best way to handle these
+    nan_to_0_cols = ['VISHEAR', 'PHYDIS', 'MR', 'OTHERMED', 'DSMIII', 'RELINQSH', 'HOUSING', 'PRTSDIED', 'PRTSJAIL', 'CHILDIS', 'DACHILD', 'AACHILD', 'ABANDMNT', 'CHBEHPRB', 'NOCOPE', 'DAPARENT', 'AAPARENT', 'SEXABUSE', 'PHYABUSE', 'IVDCHSUP', 'NOA', 'IVEAA', 'XIXMEDCD', 'IVAAFDC', 'NEGLECT', 'SSIOTHER']
+    all_records[nan_to_0_cols] = all_records[nan_to_0_cols].fillna(0)
+
+    # Replace NaNs with 'DNG' (Data Not Given) for these columns - seperate from Unknown
+    nan_to_dng_cols = ['currentPlacementSetting', 'dischargeReason', 'fosterFamilyStructure', 'everAdopted', 'caretakerFamilyStructure', 'diagnosedDisability', 'OutOfStatePlacement', 'removalManner', 'caseGoal', 'FIPSCode', 'Sex']
+    # all_records[nan_to_dng_cols] = all_records[nan_to_dng_cols].fillna('DNG')
+    all_records.loc[:, nan_to_dng_cols] = all_records.loc[:, nan_to_dng_cols].fillna('DNG')
+
+    # Drop any rows where the id did not come in properly # TODO: Investigate why this is happening
+    print(f"Records with a bad ID: {len(all_records[all_records['RecNumbr'].str.contains('[a-zA-Z]', na=False)])}")
+    all_records = all_records[~all_records['RecNumbr'].str.contains('[a-zA-Z]', na=False)]
+
+    all_records = all_records.drop(columns=['secondCaretakerAge', 
+                            'secondFosterCaretakerAge', 
+                            'firstFosterCaretakerAge',
+                            'firstCaretakerAge',
+                            #   'RU13\r', # Not needed, Rural Urban Continuum Code, only included in 2002
+                            #   'Race', # Not needed, incorperated into other columns (one hot encoding style), only included in 2002
+                            'LatRemLOS', # column seems repetitive in nature
+                            ])
+
+    # Drop records where RecNumbr is unknown
+    all_records = all_records[all_records['RecNumbr'] == all_records['RecNumbr']] # Drop records where RecNumbr is unknown
+    print(f"RecNumbr Unknown: {len(all_records[all_records['RecNumbr'] != all_records['RecNumbr']])}")
+
+    # Drop records where age is unknown
+    all_records['AgeAtStart'] = all_records['AgeAtStart'].fillna(99) # some are blank and some are 99, entry error
+    all_records = all_records[all_records['AgeAtStart'] != 99]
+    print(f"Age Unknown: {len(all_records[all_records['AgeAtStart'] == 99])}\n")
+
+    # Final Stats
+    print(f"Total Null Values: {all_records.isnull().sum().sum()}")
+    print(f"Total Records: {len(all_records)}")
+    print(f"Total Columns: {len(all_records.columns)}")
+
+    return all_records

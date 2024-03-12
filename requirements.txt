@@ -7,3 +7,7 @@ seaborn
 mlxtend
 pyarrow
 pydotplus
+google-cloud-storage
+python-dotenv
+xgboost
+scikit-learn
