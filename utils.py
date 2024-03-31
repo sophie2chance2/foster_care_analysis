@@ -116,9 +116,9 @@ def remove_nan_values(all_records):
     # all_records[nan_to_dng_cols] = all_records[nan_to_dng_cols].fillna('DNG')
     all_records.loc[:, nan_to_dng_cols] = all_records.loc[:, nan_to_dng_cols].fillna('DNG')
 
-    # Drop any rows where the id did not come in properly # TODO: Investigate why this is happening
-    print(f"Records with a bad ID: {len(all_records[all_records['RecNumbr'].str.contains('[a-zA-Z]', na=False)])}")
-    all_records = all_records[~all_records['RecNumbr'].str.contains('[a-zA-Z]', na=False)]
+    # # Drop any rows where the id did not come in properly # TODO: Investigate why this is happening
+    # print(f"Records with a bad ID: {len(all_records[all_records['RecNumbr'].str.contains('[a-zA-Z]', na=False)])}")
+    # all_records = all_records[~all_records['RecNumbr'].str.contains('[a-zA-Z]', na=False)]
 
     all_records = all_records.drop(columns=['secondCaretakerAge', 
                             'secondFosterCaretakerAge', 
@@ -129,9 +129,9 @@ def remove_nan_values(all_records):
                             'LatRemLOS', # column seems repetitive in nature
                             ])
 
-    # Drop records where RecNumbr is unknown
-    all_records = all_records[all_records['RecNumbr'] == all_records['RecNumbr']] # Drop records where RecNumbr is unknown
-    print(f"RecNumbr Unknown: {len(all_records[all_records['RecNumbr'] != all_records['RecNumbr']])}")
+    # # Drop records where RecNumbr is unknown
+    # all_records = all_records[all_records['RecNumbr'] == all_records['RecNumbr']] # Drop records where RecNumbr is unknown
+    # print(f"RecNumbr Unknown: {len(all_records[all_records['RecNumbr'] != all_records['RecNumbr']])}")
 
     # Drop records where age is unknown
     all_records['AgeAtStart'] = all_records['AgeAtStart'].fillna(99) # some are blank and some are 99, entry error
