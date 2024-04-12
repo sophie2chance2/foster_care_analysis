@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from io import BytesIO
+import re
 
 def read_cloud_data(bucket, blob_name):
     bytes_stream = BytesIO()
@@ -91,8 +92,8 @@ def make_readable(year_df, variable_values_df):
     # readable_df['secondFosterCaretakerAge'] = readable_df['DATAYEAR'] - readable_df['FCCTK2YR']
 
     readable_df['DOB'] = pd.to_datetime(readable_df['DOB'], errors='coerce')
-    # readable_df['age2021'] = pd.to_datetime('2021-12-31') - readable_df['DOB'] # not using anymore
-    # readable_df['age2021'] = readable_df['age2021'].dt.days // 365 # not using anymore
+    readable_df['age2021'] = pd.to_datetime('2021-12-31') - readable_df['DOB']
+    readable_df['age2021'] = readable_df['age2021'].dt.days // 365
 
     # TODO orgaize the date columns: DOB, Rem1Dt, DLstFCDt, LatRemDt, CurSetDt, DoDFCDt, TPRMomDt, TPRDadDt, PedRevDt, RemTrnDt, DoDTrnDt
 
@@ -179,3 +180,28 @@ def remove_nan_values(all_records):
     print(f"Total Columns: {len(all_records.columns)}")
 
     return all_records
+
+def mark_reentries(df, start_year, end_year):
+    # Assuming year columns are string type, if not convert them
+    df.columns = df.columns.map(str)
+    year_columns = [str(year) for year in range(start_year, end_year + 1)]
+
+    # Initialize a flag column to False
+    df['Reentry'] = False
+
+    # Regular expression to match a '1' followed by any number of '0's followed by a '1'
+    reentry_pattern = re.compile('10+1')
+
+    # Iterate over rows to detect re-entry pattern
+    for index, row in df.iterrows():
+        # Extract the row values for the year range into a list, ignoring NaNs
+        year_values = row[year_columns].tolist()
+
+        # Create a string representation of the row's year values
+        pattern = ''.join(['1' if x == 1.0 else '0' for x in year_values])
+
+        # Use the regular expression to search for the pattern
+        if reentry_pattern.search(pattern):
+            df.at[index, 'Reentry'] = True
+    
+    return df
